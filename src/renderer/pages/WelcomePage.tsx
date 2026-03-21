@@ -37,42 +37,55 @@ export function WelcomePage() {
   }
 
   return (
-    <div className="flex items-center justify-center h-screen bg-neutral-900">
-      <div className="max-w-md w-full px-8">
-        <h1 className="text-3xl font-bold text-neutral-100 mb-2">Spec Code</h1>
-        <p className="text-neutral-400 mb-8">Spec-driven desktop coding agent</p>
+    <div className="flex items-center justify-center w-screen h-screen bg-editor">
+      <div className="max-w-[460px] w-full px-8">
+        <div className="text-center mb-10">
+          <div className="w-16 h-16 mx-auto mb-4 bg-accent-blue rounded-xl flex items-center justify-center text-[28px] font-bold text-white">
+            SC
+          </div>
+          <h1 className="text-[26px] font-light text-white mb-1.5">Spec Code</h1>
+          <p className="text-[13px] text-text-secondary">Spec-driven desktop coding agent</p>
+        </div>
 
         <button
           onClick={handleOpenRepo}
-          className="w-full py-3 px-4 bg-blue-600 hover:bg-blue-700 text-white rounded-lg font-medium transition-colors mb-6"
+          className="w-full py-2.5 px-5 text-sm font-medium text-white bg-accent-btn border-none rounded cursor-pointer mb-6 transition-colors hover:bg-accent-btn-hover"
         >
-          Open Repo
+          Open Repository...
         </button>
 
         {error && (
-          <div className="mb-4 p-3 bg-red-900/30 border border-red-800 rounded-lg text-red-300 text-sm">
+          <div className="mb-4 px-3.5 py-2.5 bg-error-bg border border-error-border rounded text-[13px] text-error-text flex items-center gap-2">
+            <span className="text-base">&#9888;</span>
             {error}
           </div>
         )}
 
         {projects.length > 0 && (
           <div>
-            <h2 className="text-sm font-medium text-neutral-400 mb-3">Recent Projects</h2>
-            <ul className="space-y-1">
-              {projects.map((project) => (
-                <li key={project.id}>
-                  <button
-                    onClick={() => handleOpenRecent(project.path)}
-                    className="w-full text-left px-3 py-2 rounded-lg hover:bg-neutral-800 transition-colors"
-                  >
-                    <div className="text-neutral-200 text-sm font-medium">{project.name}</div>
-                    <div className="text-neutral-500 text-xs truncate">{project.path}</div>
-                  </button>
-                </li>
+            <div className="text-[11px] font-semibold uppercase tracking-[0.8px] text-text-secondary mb-2 flex items-center gap-1 cursor-pointer select-none">
+              Recent
+            </div>
+            <div className="bg-sidebar border border-border rounded overflow-hidden">
+              {projects.map((project, i) => (
+                <button
+                  key={project.id}
+                  onClick={() => handleOpenRecent(project.path)}
+                  className={`w-full text-left px-3.5 py-2.5 bg-transparent border-none cursor-pointer block transition-colors hover:bg-hover ${i > 0 ? 'border-t border-t-border' : ''}`}
+                >
+                  <div className="text-[13px] text-accent-link mb-0.5">{project.name}</div>
+                  <div className="text-[11px] text-text-muted font-mono overflow-hidden text-ellipsis whitespace-nowrap">
+                    {project.path}
+                  </div>
+                </button>
               ))}
-            </ul>
+            </div>
           </div>
         )}
+
+        <div className="mt-8 text-center text-[12px] text-text-muted">
+          <kbd className="text-text-secondary">Ctrl+O</kbd> to open a repository
+        </div>
       </div>
     </div>
   )

@@ -1,15 +1,67 @@
 @import "tailwindcss";
+/* @tailwind base;
+@tailwind components;
+@tailwind utilities; */
 
-body {
+@theme {
+  --color-editor: #1e1e1e;
+  --color-sidebar: #252526;
+  --color-activitybar: #333333;
+  --color-titlebar: #3c3c3c;
+  --color-input: #3c3c3c;
+  --color-hover: #2a2d2e;
+  --color-selection: #264f78;
+  --color-border: #3c3c3c;
+  --color-text-primary: #cccccc;
+  --color-text-secondary: #969696;
+  --color-text-muted: #6a6a6a;
+  --color-accent-blue: #007acc;
+  --color-accent-btn: #0e639c;
+  --color-accent-btn-hover: #1177bb;
+  --color-accent-green: #4ec9b0;
+  --color-accent-yellow: #dcdcaa;
+  --color-accent-red: #f44747;
+  --color-accent-link: #3794ff;
+  --color-error-bg: #5a1d1d;
+  --color-error-border: #be1100;
+  --color-error-text: #f48771;
+  --font-mono: "Cascadia Code", "Fira Code", "Consolas", monospace;
+}
+
+* {
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-  background-color: #0a0a0a;
-  color: #e5e5e5;
+  box-sizing: border-box;
+}
+
+body {
+  font-family:
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+    Cantarell, sans-serif;
+  font-size: 13px;
+  background-color: var(--color-editor);
+  color: var(--color-text-primary);
   overflow: hidden;
+  -webkit-font-smoothing: antialiased;
 }
 
 #root {
   width: 100vw;
   height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(121, 121, 121, 0.4);
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(121, 121, 121, 0.7);
 }

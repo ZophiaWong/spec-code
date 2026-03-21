@@ -1,0 +1,102 @@
+# =========================
+# Node / JS / TS
+# =========================
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+package-lock.json
+yarn.lock
+pnpm-lock.yaml
+
+# =========================
+# Build outputs
+# =========================
+dist/
+build/
+out/
+release/
+*.tsbuildinfo
+
+# Electron
+dist_electron/
+electron-build/
+*.asar
+
+# =========================
+# Environment variables
+# =========================
+.env
+.env.*
+!.env.example
+
+# =========================
+# Logs
+# =========================
+logs/
+*.log
+
+# =========================
+# OS files
+# =========================
+.DS_Store
+Thumbs.db
+
+# =========================
+# IDE / Editor
+# =========================
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# =========================
+# SQLite / local database
+# =========================
+*.sqlite
+*.sqlite3
+*.db
+
+# =========================
+# Runtime / temp files
+# =========================
+tmp/
+temp/
+.cache/
+
+# =========================
+# AI / Agent runtime data
+# =========================
+.spec-code/
+.checkpoints/
+.sessions/
+.agent/
+.cache/ai/
+
+# Anthropic / Claude artifacts
+claude-cache/
+anthropic-cache/
+
+# =========================
+# Git / Repo tools
+# =========================
+.openspec/
+openspec/tmp/
+openspec/cache/
+
+# =========================
+# Testing
+# =========================
+coverage/
+.nyc_output/
+
+# =========================
+# Misc
+# =========================
+*.pem
+*.key
+*.crt
+
+# Mac/Linux hidden files
+.*.local

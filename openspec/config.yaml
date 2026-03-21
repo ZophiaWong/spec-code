@@ -1,0 +1,28 @@
+schema: spec-driven
+
+# Project context (optional)
+# This is shown to AI when creating artifacts.
+context: |
+  Project: Spec Code — a spec-driven desktop coding agent.
+
+  Tech stack:
+  - Desktop: Electron + React + TypeScript
+  - State management: Zustand or Redux Toolkit
+  - UI components: shadcn/ui or Mantine
+  - Local runtime: Node.js services (agent, session, spec, git, verify, checkpoint)
+  - Data: SQLite + filesystem (.spec-code/) + repo openspec/ directory
+  - AI: Anthropic Agent SDK / Claude runtime
+  - Agent tools: file, bash, git, search, verify
+
+# Per-artifact rules (optional)
+rules:
+  proposal:
+    - Keep proposals under 500 words
+    - Always include a "Non-goals" section
+    - Specify which UI panel(s) are affected
+  specs:
+    - Include data model changes if applicable
+    - Note IPC contracts between main and renderer when relevant
+  tasks:
+    - Break tasks into chunks of max 2 hours
+    - Tag tasks with the layer they touch: desktop | runtime | data | model

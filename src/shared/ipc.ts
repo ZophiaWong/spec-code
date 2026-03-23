@@ -1,11 +1,18 @@
-import type { RepoInfo, RecentProject } from './types'
+import type { RepoInfo, RecentProject, Session, Run, RunEvent } from './types'
 
 export const IPC_CHANNELS = {
   REPO_OPEN: 'repo:open',
   REPO_GET_INFO: 'repo:getInfo',
   PROJECTS_LIST: 'projects:list',
   PROJECTS_CLEAR: 'projects:clear',
-  PROJECTS_REMOVE: 'projects:remove'
+  PROJECTS_REMOVE: 'projects:remove',
+  SESSION_CREATE: 'session:create',
+  SESSION_LIST: 'session:list',
+  SESSION_FORK: 'session:fork',
+  RUN_START: 'run:start',
+  RUN_LIST: 'run:list',
+  RUN_EVENTS: 'run:events',
+  RUN_EVENT: 'run:event'
 } as const
 
 export interface IpcApi {
@@ -14,6 +21,13 @@ export interface IpcApi {
   listProjects(): Promise<RecentProject[]>
   clearProjects(): Promise<void>
   removeProject(path: string): Promise<void>
+  createSession(repoPath: string, title?: string): Promise<Session>
+  listSessions(repoPath: string): Promise<Session[]>
+  forkSession(sessionId: string): Promise<Session>
+  startRun(sessionId: string, prompt: string): Promise<Run | { error: string }>
+  listRuns(sessionId: string): Promise<Run[]>
+  getRunEvents(runId: string): Promise<RunEvent[]>
+  onRunEvent(callback: (event: RunEvent) => void): () => void
 }
 
 declare global {

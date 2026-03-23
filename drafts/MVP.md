@@ -33,3 +33,27 @@ SQLite 初始化
 能显示 repo 基本信息
 
 能保存最近打开历史
+
+### Phase 2：session + chat/run 基础能力
+
+目标：让它不只是静态壳子。
+
+做什么：
+
+session 列表
+
+新建/继续/fork
+
+run 记录
+
+agent 消息流
+
+工具调用日志
+
+完成标志：
+
+能发起一个任务
+
+能看到 agent 运行过程
+
+关闭 app 再打开能恢复 session

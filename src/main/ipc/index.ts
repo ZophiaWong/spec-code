@@ -3,8 +3,8 @@ import { IPC_CHANNELS } from '../../shared/ipc'
 import { openRepoDialog, getRepoInfo } from '../git'
 import { upsertProject, listProjects, clearProjects, removeProject } from '../db/recent-projects'
 import { createSession, listSessions, forkSession } from '../db/sessions'
-import { createRun, listRuns, getRunEvents } from '../db/runs'
-import { startRun } from '../agent/run-engine'
+import { listRuns, getRunEvents } from '../db/runs'
+import { startRun, approveRun, confirmRisky } from '../agent/run-engine'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.REPO_OPEN, async (event) => {
@@ -61,5 +61,15 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.RUN_EVENTS, (_event, runId: string) => {
     return getRunEvents(runId)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.RUN_APPROVE, async (event, planRunId: string) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) return { error: 'No window found' }
+    return approveRun(planRunId, win)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.RUN_CONFIRM_RISKY, (_event, runId: string, approved: boolean) => {
+    confirmRisky(runId, approved)
   })
 }

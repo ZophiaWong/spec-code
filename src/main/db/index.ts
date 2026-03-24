@@ -32,6 +32,8 @@ export function initDatabase(): void {
       session_id TEXT NOT NULL REFERENCES sessions(id),
       prompt TEXT NOT NULL,
       status TEXT NOT NULL,
+      mode TEXT NOT NULL DEFAULT 'plan',
+      source_plan_run_id TEXT,
       created_at TEXT NOT NULL,
       finished_at TEXT
     );
@@ -44,6 +46,17 @@ export function initDatabase(): void {
       created_at TEXT NOT NULL
     );
   `)
+
+  const runColumns = db.prepare('PRAGMA table_info(runs)').all() as Array<{ name: string }>
+  const hasMode = runColumns.some((column) => column.name === 'mode')
+  const hasSourcePlanRunId = runColumns.some((column) => column.name === 'source_plan_run_id')
+
+  if (!hasMode) {
+    db.exec("ALTER TABLE runs ADD COLUMN mode TEXT NOT NULL DEFAULT 'plan'")
+  }
+  if (!hasSourcePlanRunId) {
+    db.exec('ALTER TABLE runs ADD COLUMN source_plan_run_id TEXT')
+  }
 }
 
 export function getDb(): Database.Database {

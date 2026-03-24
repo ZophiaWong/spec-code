@@ -1,11 +1,21 @@
 import { useState } from 'react'
 import type { RunEvent } from '../../shared/types'
+import { PlanCard } from './PlanCard'
+import { ApprovalPrompt } from './ApprovalPrompt'
 
 interface RunEventItemProps {
   event: RunEvent
+  canApprovePlan?: boolean
+  onApprovePlan?: (runId: string) => void
+  onConfirmRisky?: (runId: string, approved: boolean) => void
 }
 
-export function RunEventItem({ event }: RunEventItemProps) {
+export function RunEventItem({
+  event,
+  canApprovePlan = false,
+  onApprovePlan,
+  onConfirmRisky
+}: RunEventItemProps) {
   const [expanded, setExpanded] = useState(false)
 
   const parsed = (() => {
@@ -66,6 +76,28 @@ export function RunEventItem({ event }: RunEventItemProps) {
       <div className="py-2 px-3 text-[13px] text-red-400">
         Error: {parsed.message || parsed.text || event.payload}
       </div>
+    )
+  }
+
+  if (event.type === 'plan_output') {
+    const steps = Array.isArray(parsed.steps) ? parsed.steps : []
+    return (
+      <PlanCard
+        steps={steps}
+        canApprove={canApprovePlan}
+        onApprove={() => onApprovePlan?.(event.runId)}
+      />
+    )
+  }
+
+  if (event.type === 'approval_request') {
+    return (
+      <ApprovalPrompt
+        command={parsed.command || '(unknown command)'}
+        reason={parsed.reason}
+        onConfirm={() => onConfirmRisky?.(event.runId, true)}
+        onReject={() => onConfirmRisky?.(event.runId, false)}
+      />
     )
   }
 

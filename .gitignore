@@ -78,6 +78,10 @@ temp/
 claude-cache/
 anthropic-cache/
 
+# Skills
+.codex/
+.claude/
+
 # =========================
 # Git / Repo tools
 # =========================

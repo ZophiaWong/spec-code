@@ -3,7 +3,8 @@ import { useRunStore } from '../stores/run-store'
 import { useSessionStore } from '../stores/session-store'
 import { RunEventItem } from './RunEventItem'
 import { RunStatusIndicator } from './RunStatusIndicator'
-import type { RunEvent } from '../../shared/types'
+import { ModeBadge } from './ModeBadge'
+import type { RunEvent, RunMode } from '../../shared/types'
 
 export function ChatRunView() {
   const [prompt, setPrompt] = useState('')
@@ -13,10 +14,12 @@ export function ChatRunView() {
   const isAtBottomRef = useRef(true)
 
   const activeSessionId = useSessionStore((s) => s.activeSessionId)
-  const { runs, liveEvents, startRun, fetchRuns, loadRunEvents } = useRunStore()
+  const { runs, liveEvents, startRun, approveRun, confirmRisky, fetchRuns, loadRunEvents } = useRunStore()
 
   const activeRun = runs.find((r) => r.status === 'running')
   const isRunning = !!activeRun
+  const latestRun = runs[runs.length - 1]
+  const currentMode: RunMode | null = activeRun?.mode ?? latestRun?.mode ?? null
 
   useEffect(() => {
     if (activeSessionId) {
@@ -72,6 +75,15 @@ export function ChatRunView() {
     await startRun(activeSessionId, text)
   }
 
+  const handleApprovePlan = async (runId: string) => {
+    if (isRunning) return
+    await approveRun(runId)
+  }
+
+  const handleConfirmRisky = async (runId: string, approved: boolean) => {
+    await confirmRisky(runId, approved)
+  }
+
   const handleKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === 'Enter' && !e.shiftKey) {
       e.preventDefault()
@@ -81,6 +93,10 @@ export function ChatRunView() {
 
   return (
     <div className="flex flex-col h-full">
+      <div className="flex items-center justify-between px-3 py-2 border-b border-border">
+        <div className="text-[12px] text-text-secondary">Run Timeline</div>
+        {currentMode && <ModeBadge mode={currentMode} />}
+      </div>
       <div
         ref={scrollContainerRef}
         onScroll={handleScroll}
@@ -92,12 +108,24 @@ export function ChatRunView() {
               {run.prompt}
             </div>
             {run.status !== 'running' && pastEvents[run.id]?.map((event) => (
-              <RunEventItem key={event.id} event={event} />
+              <RunEventItem
+                key={event.id}
+                event={event}
+                canApprovePlan={!isRunning && run.mode === 'plan' && run.status === 'completed'}
+                onApprovePlan={handleApprovePlan}
+                onConfirmRisky={handleConfirmRisky}
+              />
             ))}
             {run.status === 'running' && liveEvents.map((event) => (
-              <RunEventItem key={event.id} event={event} />
+              <RunEventItem
+                key={event.id}
+                event={event}
+                canApprovePlan={false}
+                onApprovePlan={handleApprovePlan}
+                onConfirmRisky={handleConfirmRisky}
+              />
             ))}
-            <RunStatusIndicator status={run.status} />
+            <RunStatusIndicator status={run.status} mode={run.mode} />
           </div>
         ))}
         {runs.length === 0 && (

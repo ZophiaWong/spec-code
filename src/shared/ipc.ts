@@ -12,6 +12,8 @@ export const IPC_CHANNELS = {
   RUN_START: 'run:start',
   RUN_LIST: 'run:list',
   RUN_EVENTS: 'run:events',
+  RUN_APPROVE: 'run:approve',
+  RUN_CONFIRM_RISKY: 'run:confirm-risky',
   RUN_EVENT: 'run:event'
 } as const
 
@@ -25,6 +27,8 @@ export interface IpcApi {
   listSessions(repoPath: string): Promise<Session[]>
   forkSession(sessionId: string): Promise<Session>
   startRun(sessionId: string, prompt: string): Promise<Run | { error: string }>
+  approveRun(planRunId: string): Promise<Run | { error: string }>
+  confirmRisky(runId: string, approved: boolean): Promise<void>
   listRuns(sessionId: string): Promise<Run[]>
   getRunEvents(runId: string): Promise<RunEvent[]>
   onRunEvent(callback: (event: RunEvent) => void): () => void

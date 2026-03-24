@@ -25,17 +25,36 @@ export interface Session {
 }
 
 export type RunStatus = 'running' | 'completed' | 'failed'
+export type RunMode = 'plan' | 'apply'
 
 export interface Run {
   id: string
   sessionId: string
   prompt: string
   status: RunStatus
+  mode: RunMode
+  sourcePlanRunId: string | null
   createdAt: string
   finishedAt: string | null
 }
 
-export type RunEventType = 'agent_message' | 'tool_call' | 'tool_result' | 'error'
+export interface PlanStep {
+  title: string
+  description: string
+  affectedFiles: string[]
+}
+
+export interface PlanOutput {
+  steps: PlanStep[]
+}
+
+export type RunEventType =
+  | 'agent_message'
+  | 'tool_call'
+  | 'tool_result'
+  | 'error'
+  | 'plan_output'
+  | 'approval_request'
 
 export interface RunEvent {
   id: number

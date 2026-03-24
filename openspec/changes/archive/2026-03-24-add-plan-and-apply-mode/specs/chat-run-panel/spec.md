@@ -1,20 +1,6 @@
-# Capability: Chat Run Panel
+# Capability: Chat Run Panel (Delta)
 
-## Purpose
-Chat/run view UI in the center panel for displaying agent message streams, submitting prompts, and showing run status within an active session.
-
-## Requirements
-
-### Requirement: Chat/run view in center panel
-When a session is active, the center panel SHALL display a chat/run view consisting of a scrollable message area and a prompt input at the bottom.
-
-#### Scenario: Session active shows chat view
-- **WHEN** a session is selected and active
-- **THEN** the center panel switches from repo info to the chat/run view
-
-#### Scenario: No session active shows repo info
-- **WHEN** no session is active but a repo is open
-- **THEN** the center panel continues to display repo information
+## MODIFIED Requirements
 
 ### Requirement: Display agent message stream
 The chat/run view SHALL display run events as a chronological message list. Agent messages appear as text blocks. Tool-call events appear as collapsible log entries showing the tool name and a summary. **Plan-output events** appear as a structured plan card showing numbered steps with titles, descriptions, and affected file lists. **Approval-request events** appear as a confirmation prompt with the risky command details and Confirm/Reject buttons.
@@ -67,23 +53,7 @@ The chat/run view SHALL display the current run's status and mode. While a run i
 - **WHEN** a run finishes with status `failed`
 - **THEN** the indicator shows an error state with the error message
 
-### Requirement: Auto-scroll to latest event
-The message area SHALL auto-scroll to the bottom when new events arrive, unless the user has manually scrolled up.
-
-#### Scenario: New event arrives while at bottom
-- **WHEN** a new event arrives and the user is scrolled to the bottom
-- **THEN** the view auto-scrolls to show the new event
-
-#### Scenario: New event arrives while scrolled up
-- **WHEN** a new event arrives and the user has scrolled up
-- **THEN** the view does NOT auto-scroll (preserving the user's scroll position)
-
-### Requirement: Run history in session
-When a session is loaded, the chat/run view SHALL display events from all previous runs in chronological order, followed by any active run's live events.
-
-#### Scenario: Session with previous runs loaded
-- **WHEN** the user selects a session that has past runs
-- **THEN** the chat area shows all previous run prompts and their events in order
+## ADDED Requirements
 
 ### Requirement: Mode indicator in chat header
 The chat/run view SHALL display a mode badge in the header area showing the current or most recent run's mode. Plan mode shows a "Plan" badge; apply mode shows an "Apply" badge.

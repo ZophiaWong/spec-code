@@ -24,6 +24,24 @@ export interface Session {
   updatedAt: string
 }
 
+export interface SpecSummary {
+  name: string
+  purpose: string
+}
+
+export interface ChangeArtifactSummary {
+  id: string
+  path: string
+  status: string
+}
+
+export interface ChangeSummary {
+  name: string
+  schema: string
+  status: string
+  artifacts: ChangeArtifactSummary[]
+}
+
 export type RunStatus = 'running' | 'completed' | 'failed'
 export type RunMode = 'plan' | 'apply'
 

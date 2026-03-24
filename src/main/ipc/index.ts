@@ -1,10 +1,14 @@
 import { ipcMain, BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc'
+import type { CreateSpecRequest, CreateChangeRequest } from '../../shared/ipc'
 import { openRepoDialog, getRepoInfo } from '../git'
 import { upsertProject, listProjects, clearProjects, removeProject } from '../db/recent-projects'
 import { createSession, listSessions, forkSession } from '../db/sessions'
 import { listRuns, getRunEvents } from '../db/runs'
 import { startRun, approveRun, confirmRisky } from '../agent/run-engine'
+import { listSpecs, readSpec } from '../openspec/specs'
+import { listChanges, readChangeArtifact } from '../openspec/changes'
+import { createSpec, createChange } from '../openspec/actions'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.REPO_OPEN, async (event) => {
@@ -72,4 +76,66 @@ export function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.RUN_CONFIRM_RISKY, (_event, runId: string, approved: boolean) => {
     confirmRisky(runId, approved)
   })
+
+  ipcMain.handle(IPC_CHANNELS.SPEC_LIST, async (_event, repoPath: string) => {
+    try {
+      return await listSpecs(repoPath)
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to list specs') }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SPEC_READ, async (_event, repoPath: string, name: string) => {
+    try {
+      const content = await readSpec(repoPath, name)
+      return { content }
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to read spec') }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CHANGE_LIST, async (_event, repoPath: string) => {
+    try {
+      return await listChanges(repoPath)
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to list changes') }
+    }
+  })
+
+  ipcMain.handle(
+    IPC_CHANNELS.CHANGE_READ_ARTIFACT,
+    async (_event, repoPath: string, changeName: string, artifactPath: string) => {
+      try {
+        const content = await readChangeArtifact(repoPath, changeName, artifactPath)
+        return { content }
+      } catch (error) {
+        return { error: getErrorMessage(error, 'Failed to read change artifact') }
+      }
+    }
+  )
+
+  ipcMain.handle(IPC_CHANNELS.SPEC_CREATE, async (_event, input: CreateSpecRequest) => {
+    try {
+      await createSpec(input.repoPath, input.name)
+      return { success: true, name: input.name }
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to create spec') }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CHANGE_CREATE, async (_event, input: CreateChangeRequest) => {
+    try {
+      await createChange(input.repoPath, input.name)
+      return { success: true, name: input.name }
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to create change') }
+    }
+  })
+}
+
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error === 'object' && error !== null && 'message' in error && typeof error.message === 'string') {
+    return error.message
+  }
+  return fallback
 }

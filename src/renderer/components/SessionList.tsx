@@ -1,18 +1,22 @@
 import { useSessionStore } from '../stores/session-store'
 import { useRepoStore } from '../stores/repo-store'
+import { useSpecStore } from '../stores/spec-store'
 
 export function SessionList() {
   const repo = useRepoStore((s) => s.repo)
   const { sessions, activeSessionId, setActiveSession, createSession } = useSessionStore()
+  const setSessionView = useSpecStore((s) => s.setSessionView)
 
   const handleNewSession = async () => {
     if (!repo) return
-    await createSession(repo.path)
+    const session = await createSession(repo.path)
+    setSessionView(session.id)
   }
 
   const handleFork = async (e: React.MouseEvent, sessionId: string) => {
     e.stopPropagation()
-    await useSessionStore.getState().forkSession(sessionId)
+    const session = await useSessionStore.getState().forkSession(sessionId)
+    setSessionView(session.id)
   }
 
   return (
@@ -27,7 +31,10 @@ export function SessionList() {
         {sessions.map((session) => (
           <div
             key={session.id}
-            onClick={() => setActiveSession(session.id)}
+            onClick={() => {
+              setActiveSession(session.id)
+              setSessionView(session.id)
+            }}
             className={`flex items-center justify-between px-3 py-1.5 rounded-[3px] cursor-pointer text-[13px] ${
               activeSessionId === session.id
                 ? 'bg-[#37373d] text-white'

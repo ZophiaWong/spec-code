@@ -1,4 +1,12 @@
-import type { RepoInfo, RecentProject, Session, Run, RunEvent } from './types'
+import type {
+  RepoInfo,
+  RecentProject,
+  Session,
+  Run,
+  RunEvent,
+  SpecSummary,
+  ChangeSummary
+} from './types'
 
 export const IPC_CHANNELS = {
   REPO_OPEN: 'repo:open',
@@ -14,8 +22,33 @@ export const IPC_CHANNELS = {
   RUN_EVENTS: 'run:events',
   RUN_APPROVE: 'run:approve',
   RUN_CONFIRM_RISKY: 'run:confirm-risky',
-  RUN_EVENT: 'run:event'
+  RUN_EVENT: 'run:event',
+  SPEC_LIST: 'spec:list',
+  SPEC_READ: 'spec:read',
+  CHANGE_LIST: 'change:list',
+  CHANGE_READ_ARTIFACT: 'change:read-artifact',
+  SPEC_CREATE: 'spec:create',
+  CHANGE_CREATE: 'change:create'
 } as const
+
+export interface CreateSpecRequest {
+  repoPath: string
+  name: string
+}
+
+export interface CreateChangeRequest {
+  repoPath: string
+  name: string
+}
+
+export interface CreateEntitySuccess {
+  success: true
+  name: string
+}
+
+export interface ContentResult {
+  content: string
+}
 
 export interface IpcApi {
   openRepo(): Promise<RepoInfo | { error: string }>
@@ -31,6 +64,16 @@ export interface IpcApi {
   confirmRisky(runId: string, approved: boolean): Promise<void>
   listRuns(sessionId: string): Promise<Run[]>
   getRunEvents(runId: string): Promise<RunEvent[]>
+  listSpecs(repoPath: string): Promise<SpecSummary[] | { error: string }>
+  readSpec(repoPath: string, name: string): Promise<ContentResult | { error: string }>
+  listChanges(repoPath: string): Promise<ChangeSummary[] | { error: string }>
+  readChangeArtifact(
+    repoPath: string,
+    changeName: string,
+    artifactPath: string
+  ): Promise<ContentResult | { error: string }>
+  createSpec(input: CreateSpecRequest): Promise<CreateEntitySuccess | { error: string }>
+  createChange(input: CreateChangeRequest): Promise<CreateEntitySuccess | { error: string }>
   onRunEvent(callback: (event: RunEvent) => void): () => void
 }
 

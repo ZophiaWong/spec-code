@@ -92,7 +92,11 @@ apply mode 真的改 repo
 
 spec 列表页
 
+- 最左侧
+
 spec 详情页
+
+- 中间
 
 proposal/design/tasks 展示
 

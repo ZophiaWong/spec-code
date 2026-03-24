@@ -1,6 +1,10 @@
 import { contextBridge, ipcRenderer } from 'electron'
 import { IPC_CHANNELS } from '../shared/ipc'
-import type { IpcApi } from '../shared/ipc'
+import type {
+  IpcApi,
+  CreateSpecRequest,
+  CreateChangeRequest
+} from '../shared/ipc'
 
 const api: IpcApi = {
   openRepo: () => ipcRenderer.invoke(IPC_CHANNELS.REPO_OPEN),
@@ -16,6 +20,13 @@ const api: IpcApi = {
   confirmRisky: (runId: string, approved: boolean) => ipcRenderer.invoke(IPC_CHANNELS.RUN_CONFIRM_RISKY, runId, approved),
   listRuns: (sessionId: string) => ipcRenderer.invoke(IPC_CHANNELS.RUN_LIST, sessionId),
   getRunEvents: (runId: string) => ipcRenderer.invoke(IPC_CHANNELS.RUN_EVENTS, runId),
+  listSpecs: (repoPath: string) => ipcRenderer.invoke(IPC_CHANNELS.SPEC_LIST, repoPath),
+  readSpec: (repoPath: string, name: string) => ipcRenderer.invoke(IPC_CHANNELS.SPEC_READ, repoPath, name),
+  listChanges: (repoPath: string) => ipcRenderer.invoke(IPC_CHANNELS.CHANGE_LIST, repoPath),
+  readChangeArtifact: (repoPath: string, changeName: string, artifactPath: string) =>
+    ipcRenderer.invoke(IPC_CHANNELS.CHANGE_READ_ARTIFACT, repoPath, changeName, artifactPath),
+  createSpec: (input: CreateSpecRequest) => ipcRenderer.invoke(IPC_CHANNELS.SPEC_CREATE, input),
+  createChange: (input: CreateChangeRequest) => ipcRenderer.invoke(IPC_CHANNELS.CHANGE_CREATE, input),
   onRunEvent: (callback) => {
     const handler = (_event: Electron.IpcRendererEvent, data: unknown) => callback(data as Parameters<typeof callback>[0])
     ipcRenderer.on(IPC_CHANNELS.RUN_EVENT, handler)

@@ -101,5 +101,21 @@ export function RunEventItem({
     )
   }
 
+  if (event.type === 'file_changed') {
+    return (
+      <div className="py-1 px-3 text-[12px] text-accent-green">
+        File changed: {parsed.path || '(unknown)'} ({parsed.status || 'modified'})
+      </div>
+    )
+  }
+
+  if (event.type === 'verify_result') {
+    return (
+      <div className={`py-1 px-3 text-[12px] ${parsed.passed ? 'text-accent-green' : 'text-accent-red'}`}>
+        Verify: {parsed.command} ({parsed.passed ? 'pass' : 'fail'})
+      </div>
+    )
+  }
+
   return null
 }

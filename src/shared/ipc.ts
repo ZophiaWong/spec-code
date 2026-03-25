@@ -5,7 +5,11 @@ import type {
   Run,
   RunEvent,
   SpecSummary,
-  ChangeSummary
+  ChangeSummary,
+  Checkpoint,
+  ChangedFile,
+  VerifyResult,
+  VerifyConfig
 } from './types'
 
 export const IPC_CHANNELS = {
@@ -17,6 +21,7 @@ export const IPC_CHANNELS = {
   SESSION_CREATE: 'session:create',
   SESSION_LIST: 'session:list',
   SESSION_FORK: 'session:fork',
+  SESSION_DELETE: 'session:delete',
   RUN_START: 'run:start',
   RUN_LIST: 'run:list',
   RUN_EVENTS: 'run:events',
@@ -28,7 +33,16 @@ export const IPC_CHANNELS = {
   CHANGE_LIST: 'change:list',
   CHANGE_READ_ARTIFACT: 'change:read-artifact',
   SPEC_CREATE: 'spec:create',
-  CHANGE_CREATE: 'change:create'
+  CHANGE_CREATE: 'change:create',
+  CHECKPOINT_LIST: 'checkpoint:list',
+  CHECKPOINT_REWIND: 'checkpoint:rewind',
+  CHECKPOINTS_UPDATED: 'checkpoint:updated',
+  DIFF_CHANGED_FILES: 'diff:changed-files',
+  DIFF_FILE_CONTENT: 'diff:file-content',
+  DIFF_FILES_UPDATED: 'diff:files-updated',
+  VERIFY_RUN: 'verify:run',
+  VERIFY_CONFIG: 'verify:config',
+  VERIFY_RESULT: 'verify:result'
 } as const
 
 export interface CreateSpecRequest {
@@ -59,6 +73,7 @@ export interface IpcApi {
   createSession(repoPath: string, title?: string): Promise<Session>
   listSessions(repoPath: string): Promise<Session[]>
   forkSession(sessionId: string): Promise<Session>
+  deleteSession(sessionId: string): Promise<void>
   startRun(sessionId: string, prompt: string): Promise<Run | { error: string }>
   approveRun(planRunId: string): Promise<Run | { error: string }>
   confirmRisky(runId: string, approved: boolean): Promise<void>
@@ -74,7 +89,16 @@ export interface IpcApi {
   ): Promise<ContentResult | { error: string }>
   createSpec(input: CreateSpecRequest): Promise<CreateEntitySuccess | { error: string }>
   createChange(input: CreateChangeRequest): Promise<CreateEntitySuccess | { error: string }>
+  listCheckpoints(sessionId: string): Promise<Checkpoint[]>
+  rewindCheckpoint(checkpointId: string): Promise<{ success: true } | { error: string }>
+  getChangedFiles(runId: string): Promise<ChangedFile[]>
+  getFileDiff(runId: string, filePath: string): Promise<ContentResult | { error: string }>
+  runVerify(repoPath: string): Promise<{ started: boolean } | { error: string }>
+  getVerifyConfig(repoPath: string): Promise<VerifyConfig | { error: string }>
   onRunEvent(callback: (event: RunEvent) => void): () => void
+  onDiffFilesUpdated(callback: (payload: { runId: string }) => void): () => void
+  onCheckpointUpdated(callback: (payload: { sessionId: string }) => void): () => void
+  onVerifyResult(callback: (result: VerifyResult) => void): () => void
 }
 
 declare global {

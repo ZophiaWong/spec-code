@@ -3,12 +3,16 @@ import { IPC_CHANNELS } from '../../shared/ipc'
 import type { CreateSpecRequest, CreateChangeRequest } from '../../shared/ipc'
 import { openRepoDialog, getRepoInfo } from '../git'
 import { upsertProject, listProjects, clearProjects, removeProject } from '../db/recent-projects'
-import { createSession, listSessions, forkSession } from '../db/sessions'
-import { listRuns, getRunEvents } from '../db/runs'
+import { createSession, listSessions, forkSession, deleteSession, getSessionById } from '../db/sessions'
+import { listRuns, getRunEvents, getRunById } from '../db/runs'
 import { startRun, approveRun, confirmRisky } from '../agent/run-engine'
 import { listSpecs, readSpec } from '../openspec/specs'
 import { listChanges, readChangeArtifact } from '../openspec/changes'
 import { createSpec, createChange } from '../openspec/actions'
+import { cleanupCheckpoints, listCheckpoints, rewindCheckpointById } from '../git/checkpoint'
+import { deleteCheckpointsBySession, getCheckpointTagByRun } from '../db/checkpoints'
+import { getChangedFiles, getFileDiff } from '../git/diff'
+import { getVerifyConfig, runVerify } from '../verify'
 
 export function registerIpcHandlers(): void {
   ipcMain.handle(IPC_CHANNELS.REPO_OPEN, async (event) => {
@@ -51,6 +55,20 @@ export function registerIpcHandlers(): void {
 
   ipcMain.handle(IPC_CHANNELS.SESSION_FORK, (_event, sessionId: string) => {
     return forkSession(sessionId)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.SESSION_DELETE, async (event, sessionId: string) => {
+    const session = getSessionById(sessionId)
+    if (!session) return
+
+    await cleanupCheckpoints(session.repoPath, sessionId)
+    deleteCheckpointsBySession(sessionId)
+    deleteSession(sessionId)
+
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (win && !win.isDestroyed()) {
+      win.webContents.send(IPC_CHANNELS.CHECKPOINTS_UPDATED, { sessionId })
+    }
   })
 
   ipcMain.handle(IPC_CHANNELS.RUN_START, async (event, sessionId: string, prompt: string) => {
@@ -130,6 +148,67 @@ export function registerIpcHandlers(): void {
     } catch (error) {
       return { error: getErrorMessage(error, 'Failed to create change') }
     }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CHECKPOINT_LIST, (_event, sessionId: string) => {
+    return listCheckpoints(sessionId)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.CHECKPOINT_REWIND, async (event, checkpointId: string) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) return { error: 'No window found' }
+
+    try {
+      const result = await rewindCheckpointById(checkpointId)
+      if ('error' in result) return result
+      if (!win.isDestroyed()) {
+        win.webContents.send(IPC_CHANNELS.CHECKPOINTS_UPDATED, { sessionId: result.sessionId })
+      }
+      return { success: true as const }
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to rewind checkpoint') }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.DIFF_CHANGED_FILES, async (_event, runId: string) => {
+    try {
+      const run = getRunById(runId)
+      if (!run) return []
+      const session = getSessionById(run.sessionId)
+      if (!session) return []
+      const checkpointTag = getCheckpointTagByRun(runId)
+      if (!checkpointTag) return []
+      return await getChangedFiles(session.repoPath, checkpointTag)
+    } catch {
+      return []
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.DIFF_FILE_CONTENT, async (_event, runId: string, filePath: string) => {
+    try {
+      const run = getRunById(runId)
+      if (!run) return { error: 'Run not found' }
+      const session = getSessionById(run.sessionId)
+      if (!session) return { error: 'Session not found' }
+      const checkpointTag = getCheckpointTagByRun(runId)
+      if (!checkpointTag) return { error: 'Checkpoint not found for run' }
+
+      const content = await getFileDiff(session.repoPath, checkpointTag, filePath)
+      return { content }
+    } catch (error) {
+      return { error: getErrorMessage(error, 'Failed to load file diff') }
+    }
+  })
+
+  ipcMain.handle(IPC_CHANNELS.VERIFY_CONFIG, (_event, repoPath: string) => {
+    return getVerifyConfig(repoPath)
+  })
+
+  ipcMain.handle(IPC_CHANNELS.VERIFY_RUN, async (event, repoPath: string) => {
+    const win = BrowserWindow.fromWebContents(event.sender)
+    if (!win) return { error: 'No window found' }
+
+    return runVerify(repoPath, win)
   })
 }
 

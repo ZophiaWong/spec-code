@@ -6,11 +6,14 @@ import { RightSidebar } from '../components/RightSidebar'
 import { ChatRunView } from '../components/ChatRunView'
 import { SpecDetail } from '../components/SpecDetail'
 import { ChangeDetail } from '../components/ChangeDetail'
+import { DiffViewer } from '../components/DiffViewer'
+import { useDiffStore } from '../stores/diff-store'
 
 export function WorkspacePage() {
   const repo = useRepoStore((s) => s.repo)
   const activeView = useSpecStore((s) => s.activeView)
   const changes = useSpecStore((s) => s.changes)
+  const selectedFile = useDiffStore((s) => s.selectedFile)
 
   if (!repo) return null
 
@@ -20,7 +23,9 @@ export function WorkspacePage() {
 
   let center = <RepoInfoPanel />
 
-  if (activeView.view === 'session') {
+  if (selectedFile) {
+    center = <DiffViewer />
+  } else if (activeView.view === 'session') {
     center = <ChatRunView />
   } else if (activeView.view === 'spec-detail') {
     center = <SpecDetail repoPath={repo.path} specName={activeView.specName} />

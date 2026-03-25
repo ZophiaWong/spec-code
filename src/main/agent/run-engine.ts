@@ -2,10 +2,11 @@ import type { BrowserWindow } from 'electron'
 import { IPC_CHANNELS } from '../../shared/ipc'
 import type { Run, RunMode } from '../../shared/types'
 import { createRun, updateRunStatus, insertRunEvent, hasActiveRun, getRunById } from '../db/runs'
-import { touchSession } from '../db/sessions'
+import { getSessionById, touchSession } from '../db/sessions'
 import { runStubAgent } from './stub'
 import { isToolAllowed } from './permissions'
 import { isRiskyCommand } from './risky-patterns'
+import { createCheckpoint } from '../git/checkpoint'
 
 interface PendingApproval {
   resolve: (approved: boolean) => void
@@ -26,6 +27,26 @@ export async function startRun(
 
   const run = createRun(sessionId, prompt, { mode, sourcePlanRunId })
   touchSession(sessionId)
+  const session = getSessionById(sessionId)
+  if (!session) {
+    return { error: 'Session not found' }
+  }
+
+  if (mode === 'apply') {
+    try {
+      await createCheckpoint(session.repoPath, run.id, sessionId)
+      if (!win.isDestroyed()) {
+        win.webContents.send(IPC_CHANNELS.CHECKPOINTS_UPDATED, { sessionId })
+      }
+    } catch (error) {
+      updateRunStatus(run.id, 'failed')
+      const message = error instanceof Error ? error.message : 'Failed to create checkpoint'
+      emitRunEvent(run.id, 'error', JSON.stringify({ message }), win)
+      return { error: message }
+    }
+  }
+
+  let pendingWritePath: string | null = null
 
   runStubAgent(run.mode, async (stubEvent) => {
     if (stubEvent.type === 'tool_call') {
@@ -66,11 +87,27 @@ export async function startRun(
           }
         }
       }
+
+      if (run.mode === 'apply' && isWriteTool(toolName)) {
+        pendingWritePath = getToolPath(parsed?.args)
+      }
     }
 
     const event = insertRunEvent(run.id, stubEvent.type, stubEvent.payload)
     if (!win.isDestroyed()) {
       win.webContents.send(IPC_CHANNELS.RUN_EVENT, event)
+    }
+
+    if (run.mode === 'apply' && stubEvent.type === 'tool_result' && pendingWritePath) {
+      const fileChangedPayload = JSON.stringify({
+        path: pendingWritePath,
+        status: 'modified'
+      })
+      const fileEvent = insertRunEvent(run.id, 'file_changed', fileChangedPayload)
+      pendingWritePath = null
+      if (!win.isDestroyed()) {
+        win.webContents.send(IPC_CHANNELS.RUN_EVENT, fileEvent)
+      }
     }
   })
     .then(() => {
@@ -83,6 +120,9 @@ export async function startRun(
           payload: JSON.stringify({ status: 'completed' }),
           createdAt: new Date().toISOString()
         })
+        if (run.mode === 'apply') {
+          win.webContents.send(IPC_CHANNELS.DIFF_FILES_UPDATED, { runId: run.id })
+        }
       }
     })
     .catch((err) => {
@@ -147,4 +187,14 @@ function safeJsonParse(payload: string): any {
   } catch {
     return null
   }
+}
+
+function isWriteTool(toolName: string): boolean {
+  return new Set(['write_file', 'replace_text', 'create_file', 'edit_file']).has(toolName)
+}
+
+function getToolPath(args: unknown): string | null {
+  if (typeof args !== 'object' || args === null) return null
+  const path = (args as { path?: unknown }).path
+  return typeof path === 'string' ? path : null
 }

@@ -30,6 +30,17 @@ export function listSessions(repoPath: string): Session[] {
   return rows as Session[]
 }
 
+export function getSessionById(sessionId: string): Session | null {
+  const db = getDb()
+  const row = db.prepare(`
+    SELECT id, repo_path as repoPath, title, parent_session_id as parentSessionId,
+           created_at as createdAt, updated_at as updatedAt
+    FROM sessions
+    WHERE id = ?
+  `).get(sessionId)
+  return (row as Session | undefined) ?? null
+}
+
 export function forkSession(sessionId: string): Session {
   const db = getDb()
   const parent = db.prepare(`
@@ -55,4 +66,11 @@ export function forkSession(sessionId: string): Session {
 export function touchSession(sessionId: string): void {
   const db = getDb()
   db.prepare('UPDATE sessions SET updated_at = ? WHERE id = ?').run(new Date().toISOString(), sessionId)
+}
+
+export function deleteSession(sessionId: string): void {
+  const db = getDb()
+  db.prepare('DELETE FROM run_events WHERE run_id IN (SELECT id FROM runs WHERE session_id = ?)').run(sessionId)
+  db.prepare('DELETE FROM runs WHERE session_id = ?').run(sessionId)
+  db.prepare('DELETE FROM sessions WHERE id = ?').run(sessionId)
 }

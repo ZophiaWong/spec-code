@@ -6,7 +6,7 @@ Backend engine for initiating runs within sessions, streaming run events from ma
 ## Requirements
 
 ### Requirement: Initiate a run within a session
-The system SHALL allow initiating a run by providing a prompt string and a session ID. A new run record is created with status `running` and the specified mode (defaulting to `plan`). Events begin streaming.
+The system SHALL allow initiating a run by providing a prompt string and a session ID. A new run record is created with status `running` and the specified mode (defaulting to `plan`). Events begin streaming. For apply-mode runs, the system SHALL create an auto-checkpoint before execution begins.
 
 #### Scenario: Run created successfully
 - **WHEN** the renderer calls `run:start` with `{ sessionId, prompt }`
@@ -17,8 +17,13 @@ The system SHALL allow initiating a run by providing a prompt string and a sessi
 - **WHEN** a run is started while another run in the same session has status `running`
 - **THEN** the system SHALL reject the request with an error (one active run per session)
 
+#### Scenario: Apply run creates checkpoint before execution
+- **WHEN** an apply-mode run is initiated
+- **THEN** the system creates a checkpoint tag `spec-code/checkpoint/<runId>` before the agent begins executing
+- **AND** a checkpoint record is saved in SQLite
+
 ### Requirement: Stream run events from main to renderer
-During a run, the main process SHALL push events to the renderer via the `run:event` IPC channel using `webContents.send()`. Each event contains: `runId`, `type` (`agent_message` | `tool_call` | `tool_result` | `error`), `payload` (JSON), and `createdAt`.
+During a run, the main process SHALL push events to the renderer via the `run:event` IPC channel using `webContents.send()`. Each event contains: `runId`, `type` (`agent_message` | `tool_call` | `tool_result` | `error` | `file_changed` | `verify_result`), `payload` (JSON), and `createdAt`.
 
 #### Scenario: Agent message event streamed
 - **WHEN** the agent produces a message during a run
@@ -31,6 +36,10 @@ During a run, the main process SHALL push events to the renderer via the `run:ev
 #### Scenario: Tool result event streamed
 - **WHEN** a tool call completes during a run
 - **THEN** the main process sends a `run:event` with type `tool_result` and the result as payload
+
+#### Scenario: File changed event streamed
+- **WHEN** a write tool call modifies a file during an apply run
+- **THEN** the main process sends a `run:event` with type `file_changed` and the file path + change status as payload
 
 ### Requirement: Persist run events in SQLite
 All run events SHALL be persisted in a `run_events` table with columns: `id` (INTEGER PRIMARY KEY AUTOINCREMENT), `run_id` (TEXT), `type` (TEXT), `payload` (TEXT JSON), `created_at` (TEXT ISO-8601). Events are inserted as they are emitted.

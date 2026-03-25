@@ -1,33 +1,4 @@
-# Capability: App Layout
-
-## Purpose
-Three-panel workspace layout structure with left sidebar, center main panel, and right sidebar, plus welcome screen integration.
-## Requirements
-### Requirement: Three-panel layout structure
-The workspace view SHALL use a three-panel layout: left sidebar, center main panel, and right sidebar. The layout SHALL fill the entire window viewport.
-
-#### Scenario: Panels visible after opening a repo
-- **WHEN** a repo is opened and the workspace view is displayed
-- **THEN** three panels are visible: left sidebar, center main area, and right sidebar
-
-#### Scenario: Layout fills viewport
-- **WHEN** the window is resized
-- **THEN** the three-panel layout adjusts to fill the full window area
-
-### Requirement: Left sidebar placeholder
-The left sidebar SHALL display three collapsible sections: **Sessions** (the session list for the current repo), **Specs** (the spec list for the current repo), and **Changes** (the active change list for the current repo). Each section header SHALL be clickable to expand/collapse, and the Specs and Changes headers SHALL include a "+" button to create new items. When no repo is open, the left sidebar is hidden or shows a minimal empty state.
-
-#### Scenario: Repo open — three sections visible
-- **WHEN** a repo is opened
-- **THEN** the left sidebar shows Sessions, Specs, and Changes sections, each populated with data from the repo
-
-#### Scenario: No repo open — left sidebar empty
-- **WHEN** no repo is open
-- **THEN** the left sidebar is hidden or shows a minimal empty state
-
-#### Scenario: Sections are collapsible
-- **WHEN** the user clicks a section header
-- **THEN** the section toggles between expanded and collapsed
+## MODIFIED Requirements
 
 ### Requirement: Right sidebar placeholder
 The right sidebar SHALL display the **Changed Files panel** at the top (listing files modified during the active session's most recent apply run), a **Checkpoint list** in the middle (with Rewind action), and a **Verify button** with results summary at the bottom. When no session is active, the right sidebar SHALL show a minimal empty state. The right sidebar SHALL occupy approximately 20% of the window width with a minimum of 240px.
@@ -70,10 +41,3 @@ The center panel SHALL display the appropriate view based on the current navigat
 #### Scenario: Changed file selected — diff viewer
 - **WHEN** a file is selected from the Changed Files panel in the right sidebar
 - **THEN** the center panel displays the diff viewer for that file
-
-### Requirement: Welcome screen has Open Repo action
-The welcome screen SHALL include a prominent "Open Repo" button that triggers the folder picker dialog.
-
-#### Scenario: Open Repo button triggers dialog
-- **WHEN** the user clicks the "Open Repo" button on the welcome screen
-- **THEN** the native folder picker dialog opens

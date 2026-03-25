@@ -5,6 +5,7 @@ import { RunEventItem } from './RunEventItem'
 import { RunStatusIndicator } from './RunStatusIndicator'
 import { ModeBadge } from './ModeBadge'
 import type { RunEvent, RunMode } from '../../shared/types'
+import { useDiffStore } from '../stores/diff-store'
 
 export function ChatRunView() {
   const [prompt, setPrompt] = useState('')
@@ -45,6 +46,16 @@ export function ChatRunView() {
         const payload = JSON.parse(event.payload)
         useRunStore.getState().handleStatusChange(event.runId, payload.status)
         return
+      }
+      if (event.type === 'file_changed') {
+        try {
+          const payload = JSON.parse(event.payload) as { path?: string; status?: 'added' | 'modified' | 'deleted' }
+          if (payload.path && payload.status) {
+            useDiffStore.getState().upsertChangedFile(event.runId, { path: payload.path, status: payload.status })
+          }
+        } catch {
+          // Ignore malformed event payload.
+        }
       }
       useRunStore.getState().appendEvent(event)
     })

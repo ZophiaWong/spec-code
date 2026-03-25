@@ -1,19 +1,31 @@
+import { useState } from 'react'
+import { useSessionStore } from '../stores/session-store'
+import { ChangedFilesPanel } from './ChangedFilesPanel'
+import { CheckpointList } from './CheckpointList'
+import { VerifyButton } from './VerifyButton'
+import { VerifyResults } from './VerifyResults'
+
 export function RightSidebar() {
+  const activeSessionId = useSessionStore((s) => s.activeSessionId)
+  const [noVerifyConfig, setNoVerifyConfig] = useState(false)
+
+  if (!activeSessionId) {
+    return <div className="text-[12px] text-text-muted italic">Select a session to view changed files and checkpoints.</div>
+  }
+
   return (
     <div>
-      <div className="mb-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#bbbbbb] mb-2 flex items-center gap-1 cursor-pointer select-none">
-          <span className="text-[9px]">&#9654;</span> Task Log
-        </div>
-        <div className="text-[12px] text-text-muted italic py-2 pl-4">No tasks running</div>
-      </div>
-      <div className="mb-4">
-        <div className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#bbbbbb] mb-2 flex items-center gap-1 cursor-pointer select-none">
-          <span className="text-[9px]">&#9654;</span> Output
-        </div>
-        <div className="font-mono text-[12px] text-text-muted bg-editor p-2.5 rounded-[3px] min-h-[60px]">
-          Ready.
-        </div>
+      <ChangedFilesPanel />
+      <CheckpointList />
+      <div className="mb-2">
+        <div className="text-[11px] font-semibold uppercase tracking-[0.5px] text-[#bbbbbb] mb-2">Verify</div>
+        <VerifyButton onNoCommands={() => setNoVerifyConfig(true)} />
+        {noVerifyConfig && (
+          <div className="mt-2 text-[11px] text-text-muted">
+            No verify commands configured. Add `verify.commands` to `.spec-code/config.json`.
+          </div>
+        )}
+        <VerifyResults />
       </div>
     </div>
   )

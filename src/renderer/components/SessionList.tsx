@@ -4,7 +4,7 @@ import { useSpecStore } from '../stores/spec-store'
 
 export function SessionList() {
   const repo = useRepoStore((s) => s.repo)
-  const { sessions, activeSessionId, setActiveSession, createSession } = useSessionStore()
+  const { sessions, activeSessionId, setActiveSession, createSession, deleteSession } = useSessionStore()
   const setSessionView = useSpecStore((s) => s.setSessionView)
 
   const handleNewSession = async () => {
@@ -17,6 +17,16 @@ export function SessionList() {
     e.stopPropagation()
     const session = await useSessionStore.getState().forkSession(sessionId)
     setSessionView(session.id)
+  }
+
+  const handleDelete = async (e: React.MouseEvent, sessionId: string) => {
+    e.stopPropagation()
+    const confirmed = window.confirm('Delete this session? This also removes associated checkpoints.')
+    if (!confirmed) return
+    await deleteSession(sessionId)
+    if (activeSessionId === sessionId) {
+      setSessionView(null)
+    }
   }
 
   return (
@@ -42,13 +52,22 @@ export function SessionList() {
             }`}
           >
             <span className="truncate">{session.title}</span>
-            <button
-              onClick={(e) => handleFork(e, session.id)}
-              className="text-[10px] text-text-muted hover:text-white bg-transparent border-none cursor-pointer px-1"
-              title="Fork session"
-            >
-              &#9095;
-            </button>
+            <div className="flex items-center gap-1">
+              <button
+                onClick={(e) => handleFork(e, session.id)}
+                className="text-[10px] text-text-muted hover:text-white bg-transparent border-none cursor-pointer px-1"
+                title="Fork session"
+              >
+                &#9095;
+              </button>
+              <button
+                onClick={(e) => handleDelete(e, session.id)}
+                className="text-[10px] text-text-muted hover:text-accent-red bg-transparent border-none cursor-pointer px-1"
+                title="Delete session"
+              >
+                ✕
+              </button>
+            </div>
           </div>
         ))}
       </div>

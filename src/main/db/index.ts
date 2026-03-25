@@ -45,6 +45,14 @@ export function initDatabase(): void {
       payload TEXT NOT NULL,
       created_at TEXT NOT NULL
     );
+
+    CREATE TABLE IF NOT EXISTS checkpoints (
+      id TEXT PRIMARY KEY,
+      run_id TEXT NOT NULL REFERENCES runs(id),
+      session_id TEXT NOT NULL REFERENCES sessions(id),
+      tag_name TEXT NOT NULL,
+      created_at TEXT NOT NULL
+    );
   `)
 
   const runColumns = db.prepare('PRAGMA table_info(runs)').all() as Array<{ name: string }>

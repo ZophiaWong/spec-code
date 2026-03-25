@@ -1,10 +1,10 @@
-import { app, BrowserWindow } from 'electron'
-import { join } from 'path'
-import { initDatabase } from './db'
-import { registerIpcHandlers } from './ipc'
-import { createMenu } from './menu'
+import { app, BrowserWindow } from "electron";
+import { join } from "path";
+import { initDatabase } from "./db";
+import { registerIpcHandlers } from "./ipc";
+import { createMenu } from "./menu";
 
-let mainWindow: BrowserWindow | null = null
+let mainWindow: BrowserWindow | null = null;
 
 function createWindow(): void {
   mainWindow = new BrowserWindow({
@@ -13,37 +13,38 @@ function createWindow(): void {
     minWidth: 900,
     minHeight: 600,
     webPreferences: {
-      preload: join(__dirname, '../preload/index.mjs'),
+      preload: join(__dirname, "../preload/index.mjs"),
       sandbox: false,
       nodeIntegration: false,
-      contextIsolation: true
-    }
-  })
+      contextIsolation: true,
+    },
+  });
 
-  if (process.env['ELECTRON_RENDERER_URL']) {
-    mainWindow.loadURL(process.env['ELECTRON_RENDERER_URL'])
+  if (process.env["ELECTRON_RENDERER_URL"]) {
+    mainWindow.loadURL(process.env["ELECTRON_RENDERER_URL"]);
   } else {
-    mainWindow.loadFile(join(__dirname, '../renderer/index.html'))
+    mainWindow.loadFile(join(__dirname, "../renderer/index.html"));
   }
 }
+app.commandLine.appendSwitch("force-device-scale-factor", "1.5");
 
 app.whenReady().then(() => {
-  initDatabase()
-  registerIpcHandlers()
-  createMenu()
-  createWindow()
+  initDatabase();
+  registerIpcHandlers();
+  createMenu();
+  createWindow();
 
-  app.on('activate', () => {
+  app.on("activate", () => {
     if (BrowserWindow.getAllWindows().length === 0) {
-      createWindow()
+      createWindow();
     }
-  })
-})
+  });
+});
 
-app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
-    app.quit()
+app.on("window-all-closed", () => {
+  if (process.platform !== "darwin") {
+    app.quit();
   }
-})
+});
 
-export { mainWindow }
+export { mainWindow };

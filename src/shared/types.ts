@@ -45,6 +45,35 @@ export interface ChangeSummary {
 export type RunStatus = 'running' | 'completed' | 'failed'
 export type RunMode = 'plan' | 'apply'
 
+export type ChangedFileStatus = 'added' | 'modified' | 'deleted'
+
+export interface ChangedFile {
+  path: string
+  status: ChangedFileStatus
+}
+
+export interface Checkpoint {
+  id: string
+  runId: string
+  sessionId: string
+  tagName: string
+  createdAt: string
+  runPrompt: string
+}
+
+export interface VerifyResult {
+  command: string
+  passed: boolean
+  durationMs: number
+  output: string
+  timedOut?: boolean
+}
+
+export interface VerifyConfig {
+  commands: string[]
+  timeoutSeconds: number
+}
+
 export interface Run {
   id: string
   sessionId: string
@@ -73,6 +102,9 @@ export type RunEventType =
   | 'error'
   | 'plan_output'
   | 'approval_request'
+  | 'file_changed'
+  | 'verify_result'
+  | 'status_change'
 
 export interface RunEvent {
   id: number

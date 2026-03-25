@@ -25,7 +25,7 @@ export function Layout({ left, center, right }: LayoutProps) {
         <div className="flex-1 p-6 overflow-y-auto">{center}</div>
       </div>
 
-      <div className="w-70 min-w-[180px] h-full bg-sidebar border-l border-border flex flex-col overflow-hidden">
+      <div className="w-1/5 min-w-[240px] h-full bg-sidebar border-l border-border flex flex-col overflow-hidden">
         <div className="px-4 py-2.5 text-[11px] font-semibold uppercase tracking-[0.8px] text-[#bbbbbb] bg-sidebar border-b border-border">
           Panel
         </div>

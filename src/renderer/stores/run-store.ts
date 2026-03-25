@@ -1,5 +1,5 @@
 import { create } from 'zustand'
-import type { Run, RunEvent, PlanOutput } from '../../shared/types'
+import type { Run, RunEvent, PlanOutput, VerifyResult } from '../../shared/types'
 
 export interface PendingApprovalRequest {
   runId: string
@@ -10,6 +10,7 @@ export interface PendingApprovalRequest {
 interface RunState {
   runs: Run[]
   liveEvents: RunEvent[]
+  verifyResults: VerifyResult[]
   planOutputs: Record<string, PlanOutput>
   pendingApprovals: Record<string, PendingApprovalRequest>
   loading: boolean
@@ -19,6 +20,7 @@ interface RunState {
   approveRun: (planRunId: string) => Promise<Run | { error: string }>
   confirmRisky: (runId: string, approved: boolean) => Promise<void>
   appendEvent: (event: RunEvent) => void
+  appendVerifyResult: (result: VerifyResult) => void
   handleStatusChange: (runId: string, status: 'completed' | 'failed') => void
   clear: () => void
 }
@@ -26,6 +28,7 @@ interface RunState {
 export const useRunStore = create<RunState>((set, get) => ({
   runs: [],
   liveEvents: [],
+  verifyResults: [],
   planOutputs: {},
   pendingApprovals: {},
   loading: false,
@@ -33,7 +36,7 @@ export const useRunStore = create<RunState>((set, get) => ({
   fetchRuns: async (sessionId) => {
     set({ loading: true })
     const runs = await window.api.listRuns(sessionId)
-    set({ runs, liveEvents: [], planOutputs: {}, pendingApprovals: {}, loading: false })
+    set({ runs, liveEvents: [], verifyResults: [], planOutputs: {}, pendingApprovals: {}, loading: false })
   },
 
   loadRunEvents: async (runId) => {
@@ -45,7 +48,8 @@ export const useRunStore = create<RunState>((set, get) => ({
     if ('error' in result) return result
     set((state) => ({
       runs: [...state.runs, result],
-      liveEvents: []
+      liveEvents: [],
+      verifyResults: []
     }))
     return result
   },
@@ -55,7 +59,8 @@ export const useRunStore = create<RunState>((set, get) => ({
     if ('error' in result) return result
     set((state) => ({
       runs: [...state.runs, result],
-      liveEvents: []
+      liveEvents: [],
+      verifyResults: []
     }))
     return result
   },
@@ -103,8 +108,21 @@ export const useRunStore = create<RunState>((set, get) => ({
         }
       }
 
+      if (event.type === 'verify_result') {
+        try {
+          const parsed = JSON.parse(event.payload) as VerifyResult
+          nextState.verifyResults = [...state.verifyResults, parsed]
+        } catch {
+          // Ignore malformed payloads from IPC.
+        }
+      }
+
       return nextState as RunState
     })
+  },
+
+  appendVerifyResult: (result) => {
+    set((state) => ({ verifyResults: [...state.verifyResults, result] }))
   },
 
   handleStatusChange: (runId, status) => {
@@ -115,5 +133,12 @@ export const useRunStore = create<RunState>((set, get) => ({
     }))
   },
 
-  clear: () => set({ runs: [], liveEvents: [], planOutputs: {}, pendingApprovals: {}, loading: false })
+  clear: () => set({
+    runs: [],
+    liveEvents: [],
+    verifyResults: [],
+    planOutputs: {},
+    pendingApprovals: {},
+    loading: false
+  })
 }))
